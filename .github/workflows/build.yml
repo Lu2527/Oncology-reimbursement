@@ -1,0 +1,35 @@
+name: 自動將 Word 轉換為網站
+
+on:
+  push:
+    paths:
+      - "**.docx"
+      - "build.py"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python packages
+        run: pip install beautifulsoup4 lxml
+
+      - name: Install pandoc
+        run: sudo apt-get install -y pandoc
+
+      - name: Run build script
+        run: |
+          DOCX=$(find . -name "*.docx" | head -1)
+          echo "找到 Word 檔：$DOCX"
+          python build.py "$DOCX"
+
+      - name: Commit updated index.html
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "自動更新網站（由 Word 檔轉換）"
+          git push
